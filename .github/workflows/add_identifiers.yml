@@ -15,9 +15,11 @@ jobs:
     needs: validate
     runs-on: macos-15
     steps:
+      # Checks-out the repo
       - name: Checkout Repo
         uses: actions/checkout@v4
       
+      # Patch Fastlane Match to not print tables
       - name: Patch Match Tables
         run: |
           TABLE_PRINTER_PATH=$(ruby -e 'puts Gem::Specification.find_by_name("fastlane").gem_dir')/match/lib/match/table_printer.rb
@@ -28,12 +30,15 @@ jobs:
             exit 1
           fi
 
+      # Install project dependencies
       - name: Install Project Dependencies
         run: bundle install
 
+      # Sync the GitHub runner clock with the Windows time server (workaround)
       - name: Sync clock
         run: sudo sntp -sS time.windows.com
 
+      # Patch Fastfile to fix capability API call
       - name: Patch Fastfile to fix capability API
         run: |
           FASTFILE_PATH=./fastlane/Fastfile
@@ -44,6 +49,7 @@ jobs:
             echo "No patch needed"
           fi
 
+      # Create or update identifiers for app
       - name: Fastlane Provision
         run: bundle exec fastlane identifiers
         env:
